@@ -113,6 +113,9 @@ eureka:
       defaultZone: http://localhost:8761/eureka
     register-with-eureka: true
     fetch-registry: true
+    # Default is 30s — after a cold start the gateway would 503 on the first
+    # calls until its registry cache refreshed. 5s keeps demos glitch-free.
+    registry-fetch-interval-seconds: 5
   instance:
     prefer-ip-address: true
 
