@@ -93,7 +93,7 @@ java -jar service-registry/target/service-registry-1.0.0.jar
 java -jar auth-service/target/auth-service-1.0.0.jar --server.port=9081
 java -jar patient-service/target/patient-service-1.0.0.jar
 java -jar doctor-service/target/doctor-service-1.0.0.jar
-java -jar appointment-service/target/appointment-1.0.0.jar   # note: appointment-service-1.0.0.jar
+java -jar appointment-service/target/appointment-service-1.0.0.jar
 java -jar notification-service/target/notification-service-1.0.0.jar
 java -jar api-gateway/target/api-gateway-1.0.0.jar
 ```
