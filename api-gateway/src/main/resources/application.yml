@@ -118,6 +118,8 @@ eureka:
     registry-fetch-interval-seconds: 5
   instance:
     prefer-ip-address: true
+    ip-address: 127.0.0.1
+    hostname: localhost
 
 medicore:
   jwt:
