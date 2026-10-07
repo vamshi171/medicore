@@ -178,7 +178,12 @@ public class AppointmentService {
     // ---------- helpers ----------
 
     private DoctorSnapshotDto fetchDoctor(Long doctorId) {
-        ApiResponse<DoctorSnapshotDto> response = doctorClient.getDoctor(doctorId);
+        ApiResponse<DoctorSnapshotDto> response;
+        try {
+            response = doctorClient.getDoctor(doctorId);
+        } catch (ResourceNotFoundException upstream404) {
+            throw new ResourceNotFoundException("Doctor", doctorId);
+        }
         if (response == null || !response.isSuccess() || response.getData() == null) {
             throw new ResourceNotFoundException("Doctor", doctorId);
         }
@@ -186,7 +191,12 @@ public class AppointmentService {
     }
 
     private PatientSnapshotDto fetchPatient(Long userId) {
-        ApiResponse<PatientSnapshotDto> response = patientClient.getPatientByUserId(userId);
+        ApiResponse<PatientSnapshotDto> response;
+        try {
+            response = patientClient.getPatientByUserId(userId);
+        } catch (ResourceNotFoundException upstream404) {
+            throw new BadRequestException("Please create your patient profile before booking an appointment.");
+        }
         if (response == null || !response.isSuccess() || response.getData() == null) {
             throw new BadRequestException("Please create your patient profile before booking an appointment.");
         }
@@ -249,7 +259,12 @@ public class AppointmentService {
     private Long resolveDoctorId(Long userId) {
         // Doctor identity: appointment rows store the doctor profile id; the doctor's
         // own listing resolves it via their profile snapshot (internal Feign lookup).
-        ApiResponse<DoctorSnapshotDto> response = doctorClient.getDoctorByUserId(userId);
+        ApiResponse<DoctorSnapshotDto> response;
+        try {
+            response = doctorClient.getDoctorByUserId(userId);
+        } catch (ResourceNotFoundException upstream404) {
+            throw new ResourceNotFoundException("Doctor profile for user", userId);
+        }
         if (response == null || !response.isSuccess() || response.getData() == null) {
             throw new ResourceNotFoundException("Doctor profile for user", userId);
         }
@@ -257,7 +272,12 @@ public class AppointmentService {
     }
 
     private Long resolvePatientId(Long userId) {
-        ApiResponse<PatientSnapshotDto> response = patientClient.getPatientByUserId(userId);
+        ApiResponse<PatientSnapshotDto> response;
+        try {
+            response = patientClient.getPatientByUserId(userId);
+        } catch (ResourceNotFoundException upstream404) {
+            throw new ResourceNotFoundException("Patient profile for user", userId);
+        }
         if (response == null || !response.isSuccess() || response.getData() == null) {
             throw new ResourceNotFoundException("Patient profile for user", userId);
         }

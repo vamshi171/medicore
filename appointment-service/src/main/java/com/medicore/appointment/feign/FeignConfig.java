@@ -1,8 +1,10 @@
 package com.medicore.appointment.feign;
 
+import com.medicore.common.exception.ResourceNotFoundException;
 import com.medicore.common.security.CurrentUser;
 import com.medicore.common.security.InternalTokenFilter;
 import feign.RequestInterceptor;
+import feign.codec.ErrorDecoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,5 +29,23 @@ public class FeignConfig {
 
     private String medicoreInternalToken() {
         return System.getenv().getOrDefault("INTERNAL_TOKEN", "medicore-internal-dev-token");
+    }
+
+    /**
+     * A 404 from a downstream service means the referenced profile simply does
+     * not exist yet (e.g. a freshly registered user who has not created their
+     * patient/doctor profile). That is expected user state, not an outage, so
+     * it must surface as a business 404 instead of tripping the circuit
+     * breaker and degrading to a misleading 503.
+     */
+    @Bean
+    public ErrorDecoder businessErrorDecoder() {
+        return (methodKey, response) -> {
+            if (response.status() == 404) {
+                return new ResourceNotFoundException(
+                        "The referenced profile does not exist yet (" + methodKey + ")");
+            }
+            return new ErrorDecoder.Default().decode(methodKey, response);
+        };
     }
 }

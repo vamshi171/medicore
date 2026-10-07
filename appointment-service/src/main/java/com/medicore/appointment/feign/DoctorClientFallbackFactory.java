@@ -2,6 +2,7 @@ package com.medicore.appointment.feign;
 
 import com.medicore.appointment.feign.dto.Snapshots.DoctorSnapshotDto;
 import com.medicore.common.dto.ApiResponse;
+import com.medicore.common.exception.ResourceNotFoundException;
 import com.medicore.common.exception.ServiceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,9 @@ public class DoctorClientFallbackFactory implements FallbackFactory<DoctorClient
         return new DoctorClient() {
             @Override
             public ApiResponse<DoctorSnapshotDto> getDoctor(Long id) {
+                if (cause instanceof ResourceNotFoundException) {
+                    throw (ResourceNotFoundException) cause;
+                }
                 log.warn("DoctorClient fallback for doctor {}: {}", id, cause.toString());
                 throw new ServiceUnavailableException(
                         "Doctor service is temporarily unavailable. Please try again shortly.");
@@ -29,6 +33,9 @@ public class DoctorClientFallbackFactory implements FallbackFactory<DoctorClient
 
             @Override
             public ApiResponse<DoctorSnapshotDto> getDoctorByUserId(Long userId) {
+                if (cause instanceof ResourceNotFoundException) {
+                    throw (ResourceNotFoundException) cause;
+                }
                 log.warn("DoctorClient fallback for doctor-user {}: {}", userId, cause.toString());
                 throw new ServiceUnavailableException(
                         "Doctor service is temporarily unavailable. Please try again shortly.");
