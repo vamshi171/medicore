@@ -142,6 +142,109 @@
       ]
     },
     {
+      "name": "Blood Bank",
+      "item": [
+        { "name": "Metadata", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/metadata", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "metadata"] } } },
+        { "name": "Availability search", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/availability?bloodGroup=O_NEGATIVE&component=RED_CELLS&city=Hyderabad", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "availability"], "query": [{ "key": "bloodGroup", "value": "O_NEGATIVE" }, { "key": "component", "value": "RED_CELLS" }, { "key": "city", "value": "Hyderabad" }] } } },
+        { "name": "Compatibility lookup", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/compatibility/O_NEGATIVE", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "compatibility", "O_NEGATIVE"] } } },
+        {
+          "name": "Register as donor (self)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/bloodbank/donors/me", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "donors", "me"] },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Priya Nair\",\n  \"bloodGroup\": \"O_POSITIVE\",\n  \"age\": 31,\n  \"weightKg\": 58,\n  \"phone\": \"9000000000\",\n  \"city\": \"Hyderabad\",\n  \"lastDonationDate\": null\n}" }
+          }
+        },
+        { "name": "My donor profile", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/donors/me", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "donors", "me"] } } },
+        {
+          "name": "Raise a transfusion request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/bloodbank/requests", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "requests"] },
+            "body": { "mode": "raw", "raw": "{\n  \"patientName\": \"Priya Nair\",\n  \"bloodGroup\": \"A_POSITIVE\",\n  \"component\": \"RED_CELLS\",\n  \"unitsNeeded\": 2,\n  \"urgency\": \"ELECTIVE\",\n  \"hospital\": \"MediCore Transplant Centre\",\n  \"city\": \"Hyderabad\",\n  \"reason\": \"Post-op transfusion\"\n}" }
+          }
+        },
+        { "name": "My requests", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/requests/mine", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "requests", "mine"] } } },
+        { "name": "Request board (OFFICER/ADMIN)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/requests?status=REQUESTED&page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "requests"], "query": [{ "key": "status", "value": "REQUESTED" }, { "key": "page", "value": "0" }, { "key": "size", "value": "20" }] } } },
+        { "name": "Inventory (OFFICER/ADMIN)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/inventory?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "inventory"], "query": [{ "key": "page", "value": "0" }, { "key": "size", "value": "20" }] } } },
+        { "name": "Expiring lots (OFFICER/ADMIN)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/inventory/expiring?days=7", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "inventory", "expiring"], "query": [{ "key": "days", "value": "7" }] } } },
+        { "name": "Donor registry (OFFICER/ADMIN)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/donors?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "donors"], "query": [{ "key": "page", "value": "0" }, { "key": "size", "value": "20" }] } } },
+        {
+          "name": "Decide request (OFFICER/ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/bloodbank/requests/1/decision", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "requests", "1", "decision"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"APPROVED\",\n  \"note\": \"Group confirmed\"\n}" }
+          }
+        },
+        { "name": "Cancel my request (owner)", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/bloodbank/requests/1/cancel", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "requests", "1", "cancel"] } } },
+        { "name": "Stats", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/bloodbank/stats", "host": ["{{baseUrl}}"], "path": ["api", "bloodbank", "stats"] } } }
+      ]
+    },
+    {
+      "name": "Organ Donation",
+      "item": [
+        { "name": "Metadata", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/metadata", "host": ["{{baseUrl}}"], "path": ["api", "organs", "metadata"] } } },
+        { "name": "Stats", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/stats", "host": ["{{baseUrl}}"], "path": ["api", "organs", "stats"] } } },
+        {
+          "name": "Pledge to donate",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/organs/pledges/me", "host": ["{{baseUrl}}"], "path": ["api", "organs", "pledges", "me"] },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Priya Nair\",\n  \"bloodGroup\": \"O_POSITIVE\",\n  \"age\": 31,\n  \"city\": \"Hyderabad\",\n  \"phone\": \"9000000000\",\n  \"organs\": [\"KIDNEY\", \"LIVER\", \"CORNEA\"],\n  \"consentSigned\": true,\n  \"medicalNotes\": null\n}" }
+          }
+        },
+        { "name": "My pledge", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/pledges/me", "host": ["{{baseUrl}}"], "path": ["api", "organs", "pledges", "me"] } } },
+        { "name": "Revoke my pledge", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/organs/pledges/me/revoke", "host": ["{{baseUrl}}"], "path": ["api", "organs", "pledges", "me", "revoke"] } } },
+        { "name": "Pledge registry (COORDINATOR/ADMIN)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/pledges?status=PENDING&page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "organs", "pledges"], "query": [{ "key": "status", "value": "PENDING" }, { "key": "page", "value": "0" }, { "key": "size", "value": "20" }] } } },
+        {
+          "name": "Verify a pledge (COORDINATOR)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/organs/pledges/1/verify", "host": ["{{baseUrl}}"], "path": ["api", "organs", "pledges", "1", "verify"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"VERIFIED\",\n  \"note\": \"Consent form on file\"\n}" }
+          }
+        },
+        {
+          "name": "Add patient to waitlist (DOCTOR/COORDINATOR)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/organs/waitlist", "host": ["{{baseUrl}}"], "path": ["api", "organs", "waitlist"] },
+            "body": { "mode": "raw", "raw": "{\n  \"patientUserId\": 4,\n  \"organNeeded\": \"KIDNEY\",\n  \"bloodGroup\": \"A_POSITIVE\",\n  \"urgencyScore\": 8,\n  \"hospital\": \"MediCore Transplant Centre\",\n  \"city\": \"Hyderabad\",\n  \"notes\": \"Dialysis-dependent\"\n}" }
+          }
+        },
+        { "name": "My waitlist entries", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/waitlist/mine", "host": ["{{baseUrl}}"], "path": ["api", "organs", "waitlist", "mine"] } } },
+        { "name": "Waiting list (staff)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/waitlist?status=WAITING&page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "organs", "waitlist"], "query": [{ "key": "status", "value": "WAITING" }, { "key": "page", "value": "0" }, { "key": "size", "value": "20" }] } } },
+        { "name": "Ranked candidates (COORDINATOR)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/waitlist/1/candidates", "host": ["{{baseUrl}}"], "path": ["api", "organs", "waitlist", "1", "candidates"] } } },
+        {
+          "name": "Propose an allocation (COORDINATOR)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/organs/matches", "host": ["{{baseUrl}}"], "path": ["api", "organs", "matches"] },
+            "body": { "mode": "raw", "raw": "{\n  \"donorId\": 1,\n  \"recipientId\": 1,\n  \"notes\": \"Best available ABO match\"\n}" }
+          }
+        },
+        { "name": "Allocation book (COORDINATOR)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/matches?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "organs", "matches"], "query": [{ "key": "page", "value": "0" }, { "key": "size", "value": "20" }] } } },
+        { "name": "My allocations", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/organs/matches/mine", "host": ["{{baseUrl}}"], "path": ["api", "organs", "matches", "mine"] } } },
+        {
+          "name": "Update allocation status (COORDINATOR)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/organs/matches/1/status", "host": ["{{baseUrl}}"], "path": ["api", "organs", "matches", "1", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"notes\": \"Theatre booked\"\n}" }
+          }
+        }
+      ]
+    },
+    {
       "name": "Notifications",
       "item": [
         { "name": "My notifications", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/notifications?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "notifications"], "query": [{ "key": "page", "value": "0" }, { "key": "size", "value": "20" }] } } }

@@ -39,7 +39,13 @@ public class DemoDataSeeder {
             Map.entry("dr.reddy@medicore.com",     new String[]{"Reddy@123",   "DOCTOR"}),
             Map.entry("arjun@medicore.com",        new String[]{"Arjun@123",   "PATIENT"}),
             Map.entry("priya@medicore.com",        new String[]{"Priya@123",   "PATIENT"}),
-            Map.entry("rahul@medicore.com",        new String[]{"Rahul@123",   "PATIENT"}));
+            Map.entry("rahul@medicore.com",        new String[]{"Rahul@123",   "PATIENT"}),
+            // Additional patients so the organ waitlist has real identities to point at
+            Map.entry("meera@medicore.com",        new String[]{"Meera@123",   "PATIENT"}),
+            Map.entry("suresh@medicore.com",       new String[]{"Suresh@123",  "PATIENT"}),
+            // Staff roles for the two new domains — provisioned here, never self-registered
+            Map.entry("bloodbank@medicore.com",    new String[]{"Bloodbank@123",   "BLOOD_BANK_OFFICER"}),
+            Map.entry("coordinator@medicore.com",  new String[]{"Coordinator@123", "TRANSPLANT_COORDINATOR"}));
 
     @Bean
     ApplicationRunner seedDemoUsers(UserRepository userRepository, BCryptPasswordEncoder encoder) {

@@ -8,6 +8,10 @@ spring:
     gateway:
       # JWT and role filters are attached per-route below: public routes simply
       # omit them, which keeps whitelisting declarative and reviewable.
+      #
+      # ORDERING RULE: literal path segments (/me, /mine, /*/status,
+      # /*/candidates, /*/decision) must be declared BEFORE the catch-all
+      # "/**" route for the same prefix, otherwise the {id} pattern swallows them.
       routes:
         # ---------- AUTH SERVICE ----------
         - id: auth-public
@@ -97,6 +101,8 @@ spring:
                 allowedRoles: ADMIN,DOCTOR,PATIENT
 
         # ---------- NOTIFICATION SERVICE ----------
+        # Every authenticated role gets a notification feed, including the two
+        # domain-operator roles added for blood banking and organ donation.
         - id: notification-secure
           uri: lb://NOTIFICATION-SERVICE
           predicates:
@@ -105,7 +111,218 @@ spring:
             - Jwt
             - name: RoleAuth
               args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT,BLOOD_BANK_OFFICER,TRANSPLANT_COORDINATOR
+
+        # ================= BLOOD BANK SERVICE =================
+        # Domain roles: ADMIN, DOCTOR, PATIENT, BLOOD_BANK_OFFICER.
+        # TRANSPLANT_COORDINATOR is deliberately absent — the two domains are
+        # separate bounded contexts with separate operators.
+        - id: bloodbank-metadata
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/metadata,/api/bloodbank/compatibility/**
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT,BLOOD_BANK_OFFICER
+
+        # Availability is the narrow, patient-safe projection of stock.
+        - id: bloodbank-availability
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/availability
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT,BLOOD_BANK_OFFICER
+
+        # a requester's own history (literal "mine" before the /** catch-all)
+        - id: bloodbank-requests-mine
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/requests/mine
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT,BLOOD_BANK_OFFICER
+
+        # only staff decide a request
+        - id: bloodbank-request-decision
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/requests/*/decision
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,BLOOD_BANK_OFFICER
+
+        # raise / read-one / cancel — ownership is enforced inside the service
+        - id: bloodbank-requests
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/requests,/api/bloodbank/requests/**
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT,BLOOD_BANK_OFFICER
+
+        # full stock detail (thresholds, expiry, lot history) is staff-only
+        - id: bloodbank-inventory
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/inventory,/api/bloodbank/inventory/**
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,BLOOD_BANK_OFFICER
+
+        # any authenticated role may register ITSELF as a donor (row keyed by caller id)
+        - id: bloodbank-donors-me
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/donors/me
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT,BLOOD_BANK_OFFICER
+
+        # the donor registry is staff-only
+        - id: bloodbank-donors-registry
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/donors,/api/bloodbank/donors/**
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,BLOOD_BANK_OFFICER
+
+        - id: bloodbank-stats
+          uri: lb://BLOODBANK-SERVICE
+          predicates:
+            - Path=/api/bloodbank/stats
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,BLOOD_BANK_OFFICER
+
+        # ================= ORGAN DONATION SERVICE =================
+        # Domain roles: ADMIN, DOCTOR, PATIENT, TRANSPLANT_COORDINATOR.
+        - id: organs-metadata
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/metadata
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT,TRANSPLANT_COORDINATOR
+
+        # a patient's own pledge, updated by consent
+        - id: organs-pledges-me
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/pledges/me,/api/organs/pledges/me/**
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
                 allowedRoles: ADMIN,DOCTOR,PATIENT
+
+        # registry reads and verification are coordinator-only
+        - id: organs-pledges-registry
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/pledges,/api/organs/pledges/**
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,TRANSPLANT_COORDINATOR
+
+        # a patient's own waitlist entries
+        - id: organs-waitlist-mine
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/waitlist/mine
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT
+
+        # the ranked candidate view exposes donor identities — coordinator-only
+        - id: organs-waitlist-candidates
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/waitlist/*/candidates
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,TRANSPLANT_COORDINATOR
+
+        # allocation decisions
+        - id: organs-waitlist-status
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/waitlist/*/status
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,TRANSPLANT_COORDINATOR
+
+        # list a patient / read the board — clinicians (a PATIENT uses /mine)
+        - id: organs-waitlist
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/waitlist,/api/organs/waitlist/**
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,TRANSPLANT_COORDINATOR
+
+        # a participant's own allocations
+        - id: organs-matches-mine
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/matches/mine
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,PATIENT
+
+        # propose / advance allocations and read the whole book — coordinator-only
+        - id: organs-matches
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/matches,/api/organs/matches/**
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,TRANSPLANT_COORDINATOR
+
+        - id: organs-stats
+          uri: lb://ORGAN-DONATION-SERVICE
+          predicates:
+            - Path=/api/organs/stats
+          filters:
+            - Jwt
+            - name: RoleAuth
+              args:
+                allowedRoles: ADMIN,DOCTOR,TRANSPLANT_COORDINATOR
 
 eureka:
   client:

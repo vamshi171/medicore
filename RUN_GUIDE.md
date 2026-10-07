@@ -11,6 +11,8 @@ projects/
 │   ├── doctor-service/          doctor search          (:8083)
 │   ├── appointment-service/     booking engine         (:8084)
 │   ├── notification-service/    async notifications    (:8085)
+│   ├── bloodbank-service/       blood inventory+donors (:8086)
+│   ├── organ-donation-service/  pledges, waitlist, ABO (:8087)
 │   ├── service-registry/        Eureka                 (:8761)
 │   ├── medicore-common/         shared library (no main class)
 │   ├── medicore-frontend/       React 18 + Vite        (:5173 or next free port)
@@ -44,7 +46,9 @@ bash "C:/Users/2531050/Saved Games/bmp/aws-crash-course/projects/_tools/run-back
 
 Wait until you see **`ALL BACKEND SERVICES HEALTHY`**.
 
-What it starts, in order: MySQL → Eureka → auth → patient → doctor → appointment → notification → gateway. It is idempotent — running it again skips anything already up.
+What it starts, in order: MySQL → Eureka → auth → patient → doctor → appointment → notification → bloodbank → organ-donation → gateway. It is idempotent — running it again skips anything already up.
+
+Once everything reports healthy, `bash <projects>/_tools/verify-domains.sh` proves the two new domains end-to-end through the gateway (role matrix, ownership, ABO rules, stock decrement). It prints a `PASSED/FAILED` tally and exits non-zero on any failure.
 
 ### Terminal 2 — frontend
 
@@ -78,10 +82,12 @@ Click **`+`** in the terminal panel for each new terminal. Use **Git Bash** (or 
 | 5 | Doctor | `mvn spring-boot:run -pl doctor-service` |
 | 6 | Appointment | `mvn spring-boot:run -pl appointment-service` |
 | 7 | Notification | `mvn spring-boot:run -pl notification-service` |
-| 8 | Gateway | `mvn spring-boot:run -pl api-gateway` |
-| 9 | Frontend | `cd medicore-frontend && npm run dev` |
+| 8 | Blood bank | `mvn spring-boot:run -pl bloodbank-service` |
+| 9 | Organ donation | `mvn spring-boot:run -pl organ-donation-service` |
+| 10 | Gateway | `mvn spring-boot:run -pl api-gateway` |
+| 11 | Frontend | `cd medicore-frontend && npm run dev` |
 
-Wait for `Started <Name>Application` in each terminal before the next. `mvn spring-boot:run` compiles on the fly — no separate build step needed. **Run steps 2-8 from the `projects/medicore` folder**, and make sure step 1's `source ../_tools/env.sh` was done at least once in that shell (it puts `mvn` on PATH).
+Wait for `Started <Name>Application` in each terminal before the next. `mvn spring-boot:run` compiles on the fly — no separate build step needed. **Run steps 2-10 from the `projects/medicore` folder**, and make sure step 1's `source ../_tools/env.sh` was done at least once in that shell (it puts `mvn` on PATH).
 
 ### If you prefer running the prebuilt jars (faster, no mvn at runtime)
 
@@ -95,6 +101,8 @@ java -jar patient-service/target/patient-service-1.0.0.jar
 java -jar doctor-service/target/doctor-service-1.0.0.jar
 java -jar appointment-service/target/appointment-service-1.0.0.jar
 java -jar notification-service/target/notification-service-1.0.0.jar
+java -jar bloodbank-service/target/bloodbank-service-1.0.0.jar
+java -jar organ-donation-service/target/organ-donation-service-1.0.0.jar
 java -jar api-gateway/target/api-gateway-1.0.0.jar
 ```
 
@@ -138,12 +146,18 @@ Then the same `mvn spring-boot:run` / `java -jar` commands work (no `source env.
 | Patient | arjun@medicore.com | Arjun@123 |
 | Patient | priya@medicore.com | Priya@123 |
 | Patient | rahul@medicore.com | Rahul@123 |
+| Blood bank officer | bloodbank@medicore.com | Bloodbank@123 |
+| Transplant coordinator | coordinator@medicore.com | Coordinator@123 |
+| Patient | meera@medicore.com | Meera@123 |
+| Patient | suresh@medicore.com | Suresh@123 |
+
+Each role lands on its own console: patients and doctors keep the original portal, `bloodbank@` opens the stock command centre (`/bloodbank`), and `coordinator@` opens the transplant desk (`/transplant`).
 
 ## ✅ Health checks
 
 | URL | Expect |
 |---|---|
-| http://localhost:8761 | Eureka dashboard, 6 `MEDICORE-*` apps UP |
+| http://localhost:8761 | Eureka dashboard, 8 apps UP (gateway, auth, patient, doctor, appointment, notification, bloodbank, organ) |
 | http://localhost:8080 | Gateway (any API response) |
 | Vite URL | MediCore login page |
 

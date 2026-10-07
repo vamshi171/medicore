@@ -23,8 +23,18 @@ public class User {
     @Column(nullable = false)
     private String password; // BCrypt hash — never the raw password
 
+    /**
+     * Stored as a VARCHAR rather than the database's native ENUM type.
+     *
+     * Hibernate 6 maps STRING enums to MySQL ENUM when the dialect allows it,
+     * and Hibernate's `ddl-auto: update` cannot widen an ENUM's value list. That
+     * made adding a role a silent startup failure ("Data truncated for column
+     * 'role'") on any database created before the new value existed. An
+     * explicit VARCHAR(40) keeps the identity table's most important column
+     * future-proof and portable across databases.
+     */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 40, columnDefinition = "varchar(40)")
     private Role role;
 
     @Column(nullable = false)

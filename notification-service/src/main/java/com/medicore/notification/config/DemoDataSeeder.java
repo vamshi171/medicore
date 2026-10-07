@@ -47,9 +47,10 @@ public class DemoDataSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (notificationRepository.count() > 0) {
-            return; // demo data only for a fresh notifications database
-        }
+        // Deliberately NOT gated on `count() > 0`: that guard made the seeder
+        // skip users added to the demo cast later (a new role introduced after
+        // the first boot never received its welcome notification). Idempotency
+        // is already per-recipient via existsByRecipientUserId below.
         Map<String, Long> userIds = lookup.userIdsByEmail();
         if (userIds.isEmpty()) {
             log.info("[demo-seed] notification-service: auth-service not ready — seeding next boot");
@@ -63,6 +64,10 @@ public class DemoDataSeeder implements ApplicationRunner {
             put("dr.sharma@medicore.com", "Welcome to MediCore! Your cardiology profile is live — you can receive bookings now.");
             put("dr.mehta@medicore.com",  "Welcome to MediCore! Your dermatology profile is live — you can receive bookings now.");
             put("dr.reddy@medicore.com",  "Welcome to MediCore! Your pediatrics profile is live — you can receive bookings now.");
+            put("meera@medicore.com",     "Welcome to MediCore! You have been added to the transplant waitlist — updates appear here.");
+            put("suresh@medicore.com",    "Welcome to MediCore! Your transplant waitlist entry is active — updates appear here.");
+            put("bloodbank@medicore.com", "Welcome to MediCore! Blood bank console ready — review stock levels and pending requests.");
+            put("coordinator@medicore.com", "Welcome to MediCore! Transplant console ready — there are donor pledges awaiting verification.");
         }};
 
         LocalDateTime now = LocalDateTime.now().minusMinutes(5);

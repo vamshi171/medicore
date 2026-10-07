@@ -1,0 +1,45 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: BLOODBANK-SERVICE
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/medicore_bloodbank?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USER:medicore}
+    password: ${DB_PASSWORD:medicore123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    hostname: localhost
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+medicore:
+  jwt:
+    secret: ${JWT_SECRET:medicore-dev-secret-key-change-me-in-production-0123456789abcdef}
+  internal-token: ${INTERNAL_TOKEN:medicore-internal-dev-token}
+  # auth-service runs on 9081 locally (8081 is taken on this machine)
+  auth-service-url: ${AUTH_SERVICE_URL:http://localhost:9081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

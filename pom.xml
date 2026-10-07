@@ -27,6 +27,8 @@
         <module>doctor-service</module>
         <module>appointment-service</module>
         <module>notification-service</module>
+        <module>bloodbank-service</module>
+        <module>organ-donation-service</module>
     </modules>
 
     <properties>

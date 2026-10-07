@@ -1,6 +1,8 @@
 # ✚ MediCore — Healthcare Management System
 
-A full-stack **Java microservices** healthcare platform: patients find doctors and book appointments, doctors manage their schedule, admins govern users and view statistics — with **JWT security, OpenFeign inter-service calls, Resilience4j circuit breakers, async notifications, and a React (ES6+) frontend**.
+A full-stack **Java microservices** healthcare platform: patients find doctors and book appointments, doctors manage their schedule and raise transfusion requests, admins govern users and view statistics, a **blood bank officer** runs inventory and donor cool-down, and a **transplant coordinator** drives pledges, the waiting list and ABO-aware allocations — with **JWT security, OpenFeign inter-service calls, Resilience4j circuit breakers, async notifications, and a React (ES6+) frontend**.
+
+Three domains, five roles: `PATIENT`, `DOCTOR`, `ADMIN`, `BLOOD_BANK_OFFICER`, `TRANSPLANT_COORDINATOR`.
 
 ## 📦 Microservice repositories
 
@@ -16,6 +18,8 @@ Every service also lives as a **standalone, independently buildable repo** (own 
 | [medicore-doctor-service](https://github.com/Vamshikrishna720/medicore-doctor-service) — search, availability | 8083 |
 | [medicore-appointment-service](https://github.com/Vamshikrishna720/medicore-appointment-service) — Feign + Resilience4j booking | 8084 |
 | [medicore-notification-service](https://github.com/Vamshikrishna720/medicore-notification-service) — async notifications | 8085 |
+| medicore-bloodbank-service — inventory, requests, donor cool-down (standalone folder in `medicore-repos/`) | 8086 |
+| medicore-organ-donation-service — pledges, waitlist, ABO matching engine (standalone folder in `medicore-repos/`) | 8087 |
 | [medicore-frontend](https://github.com/Vamshikrishna720/medicore-frontend) — React 18 SPA | 3000 |
 
 > Standalone service repos resolve `com.medicore:medicore-common:1.0.0` from the local Maven repo — run `mvn install` in medicore-common first (or publish to GitHub Packages).
@@ -44,7 +48,18 @@ Every service also lives as a **standalone, independently buildable repo** (own 
 │              │ │           │ │              │ │ Resilience4j  │ │                 │
 └──────┬───────┘ └─────┬─────┘ └───┬──────────┘ └──┬────────────┘ └┬────────────────┘
        │               │           │               │               │
+┌──────▼────────┐ ┌────▼──────────────────┐
+│ BLOODBANK     │ │ ORGAN-DONATION        │  (same gateway/registry contract)
+│ :8086         │ │ :8087                 │
+│ BloodInventory│ │ OrganDonor (pledges),  │
+│ BloodRequest  │ │ WaitlistEntry,        │
+│ BloodDonor    │ │ MatchRecord           │
+│ (90-day       │ │ OrganCompatibility-   │
+│  cool-down)   │ │ Service (ABO engine)  │
+└──────┬────────┘ └────┬──────────────────┘
+       │               │
    medicore_auth  medicore_…   medicore_…    medicore_appointments  medicore_notifications
+   medicore_bloodbank                            medicore_organs
        └───────────────┴───────────┴───── MySQL 8 (database-per-service) ─────┘
 
   SERVICE-REGISTRY :8761 — Netflix Eureka discovery server
@@ -66,6 +81,8 @@ Every service also lives as a **standalone, independently buildable repo** (own 
 | doctor-service | 8083 | JPQL dynamic search w/ index on specialization, availability toggle |
 | appointment-service | 8084 | OpenFeign + Resilience4j (circuit breaker, retry, timelimiter), `@Transactional`, `@Version`, `@Async`, Streams API stats |
 | notification-service | 8085 | Internal ingest, async simulated email (QUEUED→SENT/FAILED) |
+| bloodbank-service | 8086 | Stock lots with expiry + usable-unit threshold, request workflow (REQUESTED→APPROVED→FULFILLED/REJECTED/CANCELLED), donor registry with a 90-day cool-down |
+| organ-donation-service | 8087 | Pledges with per-organ consent, waiting list with urgency, pure `OrganCompatibilityService` (ABO organ rules + immune-privileged tissue, ranked candidate list), coordinator-only allocation |
 | service-registry | 8761 | Eureka server |
 | medicore-frontend | 5173 (dev) / 3000 (docker) | React 18, Vite, axios interceptors, Context API, role-guarded routes |
 
@@ -101,6 +118,8 @@ mvn spring-boot:run -pl patient-service
 mvn spring-boot:run -pl doctor-service
 mvn spring-boot:run -pl appointment-service
 mvn spring-boot:run -pl notification-service
+mvn spring-boot:run -pl bloodbank-service
+mvn spring-boot:run -pl organ-donation-service
 
 # 2. frontend
 cd medicore-frontend && npm install && npm run dev   # http://localhost:5173
@@ -113,6 +132,8 @@ cd medicore-frontend && npm install && npm run dev   # http://localhost:5173
 | ADMIN | admin@medicore.com | Admin@123 |
 | DOCTOR | doctor@medicore.com | Doctor@123 |
 | PATIENT | patient@medicore.com | Patient@123 |
+| BLOOD_BANK_OFFICER | bloodbank@medicore.com | Bloodbank@123 |
+| TRANSPLANT_COORDINATOR | coordinator@medicore.com | Coordinator@123 |
 
 > First flow to try: login as doctor → create profile → login as patient (register a new one) → find doctors → book 10:00 or 10:30-style slot → doctor confirms → patient sees notification.
 
@@ -121,6 +142,9 @@ cd medicore-frontend && npm install && npm run dev   # http://localhost:5173
 ```bash
 mvn test                       # JUnit 5 + Mockito unit tests (auth, appointment, common JWT)
 npm run build                  # frontend build check
+
+# end-to-end role gate for the two new domains (needs the full stack up):
+bash ../_tools/verify-domains.sh   # 75 assertions: role matrix, ownership, ABO rules, stock decrement
 ```
 
 ### Postman
@@ -148,6 +172,30 @@ Import `postman/MediCore.postman_collection.json` → run **Auth → Login** fir
 | PATCH | /appointments/{id}/cancel, /{id}/status?status= | mixed | cancel; doctor confirm/complete |
 | GET | /appointments/stats | ADMIN | Streams-computed statistics |
 | GET | /notifications | any | my notifications |
+| GET | /bloodbank/metadata, /bloodbank/stats | mixed | reference data; stock statistics |
+| GET | /bloodbank/availability | any domain role | public stock search (group + component + city) |
+| GET | /bloodbank/compatibility/{bloodGroup} | any domain role | who this group can receive from / donate to |
+| GET | /bloodbank/inventory, /bloodbank/inventory/expiring | OFFICER, ADMIN | full lots incl. thresholds and expiry |
+| POST/PUT/DELETE | /bloodbank/inventory, /{id}, /{id}/adjust | OFFICER, ADMIN | stock lots: record, edit, adjust, remove |
+| GET | /bloodbank/donors | OFFICER, ADMIN | donor registry (group/city/eligibility filters, cool-down) |
+| PATCH | /bloodbank/donors/{id}/eligibility | OFFICER, ADMIN | defer / re-activate a donor |
+| POST | /bloodbank/requests | PATIENT, DOCTOR | raise a transfusion request |
+| GET | /bloodbank/requests/mine, /bloodbank/requests, /{id} | owner vs OFFICER/ADMIN | own requests (403 on someone else's) vs the full board |
+| POST | /bloodbank/requests/{id}/decision | OFFICER, ADMIN | APPROVED / REJECTED / FULFILLED (fulfilment issues stock FIFO and decrements usable units) |
+| PATCH | /bloodbank/requests/{id}/cancel | owner | withdraw an open request |
+| POST/GET/PUT | /bloodbank/donors/me | PATIENT | register (201) / read / update own donor profile (90-day cool-down enforced) |
+| GET | /organs/metadata, /organs/stats | mixed | organ + blood-group reference data; domain statistics |
+| POST/GET/PUT | /organs/pledges/me | PATIENT | pledge (multi-organ + consent flags), read, update |
+| PATCH | /organs/pledges/me/revoke | PATIENT | withdraw consent |
+| GET | /organs/pledges, /organs/pledges/{id} | COORDINATOR, ADMIN | pledge registry |
+| PATCH | /organs/pledges/{id}/verify | COORDINATOR | verify / revoke a pledge |
+| POST | /organs/waitlist | DOCTOR, COORDINATOR | list a patient |
+| GET | /organs/waitlist/mine, /organs/waitlist, /{id} | owner vs staff | own entries vs the filtered waiting list |
+| PATCH | /organs/waitlist/{id}/status | COORDINATOR, ADMIN | MATCHED / TRANSPLANTED / REMOVED |
+| GET | /organs/waitlist/{id}/candidates | COORDINATOR, ADMIN | ranked ABO-checked donors — the engine never offers an incompatible pair |
+| POST | /organs/matches | COORDINATOR | propose an allocation (rejects an incompatible pair with 400) |
+| PATCH | /organs/matches/{id}/status | COORDINATOR | CONFIRMED / COMPLETED / WITHDRAWN (withdraw returns the recipient to the waiting list) |
+| GET | /organs/matches/mine, /organs/matches | participant vs COORDINATOR/ADMIN | own allocations vs the allocation book |
 
 Every response uses the shared envelope `ApiResponse<T> { success, message, data, timestamp }`; lists use `PageResponse<T>`.
 
@@ -172,7 +220,7 @@ Every response uses the shared envelope `ApiResponse<T> { success, message, data
 | Spring Security + JWT | ✅ | auth (issue, BCrypt), gateway (validate), common filter (verify) |
 | REST APIs | ✅ | documented above, Swagger on every service |
 | Core Java: OOP, Collections, Generics, Multithreading, Lambdas, Streams, Exception handling | ✅ | entities+inheritance & records, `ApiResponse<T>`/`PageResponse<T>`, ThreadPoolTaskExecutor + `@Async`, lambdas/method refs, Streams `groupingBy/counting`, `@RestControllerAdvice` |
-| MySQL, SQL, query optimization, indexing, transactions | ✅ | 5 schemas, JPQL overlap query, composite index `(doctor_id, appointment_date)`, unique + search indexes, `@Transactional` + `@Version` |
+| MySQL, SQL, query optimization, indexing, transactions | ✅ | 7 schemas, JPQL overlap query, composite index `(doctor_id, appointment_date)`, unique + search indexes, `@Transactional` + `@Version` |
 | Microservices, API Gateway, OpenFeign, Resilience4j | ✅ | Eureka, Spring Cloud Gateway, Feign clients with fallback factories, CB/retry/timelimiter config |
 | React.js, JavaScript ES6+, HTML5, CSS3 | ✅ | React 18 + Vite, hooks/Context, hand-written responsive CSS, zero UI libraries |
 | AWS fundamentals | ⚠️ Fundamentals only | deploy notes below — no live AWS infra in this repo |

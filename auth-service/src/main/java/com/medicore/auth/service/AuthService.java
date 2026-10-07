@@ -37,10 +37,20 @@ public class AuthService {
         this.tokenProvider = tokenProvider;
     }
 
+    /**
+     * Roles a member of the public may choose for themselves. Staff and operator
+     * roles (ADMIN, BLOOD_BANK_OFFICER, TRANSPLANT_COORDINATOR) are provisioned
+     * administratively, so this is an allow-list rather than a single deny check
+     * — adding a staff role later can never accidentally become self-registerable.
+     */
+    private static final java.util.Set<Role> SELF_REGISTERABLE = java.util.Set.of(Role.PATIENT, Role.DOCTOR);
+
     @Transactional
     public UserResponse register(RegisterRequest request) {
-        if (request.role() == Role.ADMIN) {
-            throw new BadRequestException("Admin accounts cannot be self-registered");
+        if (!SELF_REGISTERABLE.contains(request.role())) {
+            throw new BadRequestException(
+                    "The " + request.role().name().toLowerCase().replace('_', ' ')
+                            + " role cannot be self-registered. Contact an administrator.");
         }
         if (userRepository.existsByEmail(request.email())) {
             throw new BadRequestException("Email is already registered");

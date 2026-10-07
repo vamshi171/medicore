@@ -135,6 +135,40 @@ services:
       service-registry:
         condition: service_started
 
+  bloodbank-service:
+    build: ./medicore-blood-bank-service
+    ports:
+      - "8086:8086"
+    environment:
+      DB_HOST: mysql
+      DB_USER: medicore
+      DB_PASSWORD: medicore123
+      EUREKA_URI: http://service-registry:8761/eureka
+      JWT_SECRET: ${JWT_SECRET:-medicore-dev-secret-key-change-me-in-production-0123456789abcdef}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:-medicore-internal-dev-token}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+
+  organ-donation-service:
+    build: ./medicore-organ-donation-service
+    ports:
+      - "8087:8087"
+    environment:
+      DB_HOST: mysql
+      DB_USER: medicore
+      DB_PASSWORD: medicore123
+      EUREKA_URI: http://service-registry:8761/eureka
+      JWT_SECRET: ${JWT_SECRET:-medicore-dev-secret-key-change-me-in-production-0123456789abcdef}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:-medicore-internal-dev-token}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+
   api-gateway:
     build: ./medicore-api-gateway
     ports:

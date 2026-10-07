@@ -59,7 +59,7 @@ jobs:
 
       - name: Build all Docker images
         run: |
-          for svc in service-registry api-gateway auth-service patient-service doctor-service appointment-service notification-service; do
+          for svc in service-registry api-gateway auth-service patient-service doctor-service appointment-service notification-service bloodbank-service organ-donation-service; do
             docker build -t medicore/$svc:latest $svc
           done
           docker build -t medicore/frontend:latest medicore-frontend
