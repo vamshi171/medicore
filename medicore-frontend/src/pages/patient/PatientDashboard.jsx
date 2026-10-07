@@ -19,7 +19,9 @@ export default function PatientDashboard() {
         setPage(data.data.page);
         setTotalPages(data.data.totalPages);
       })
-      .catch((err) => setError(extractError(err)))
+      .catch((err) => setError(err?.response?.status === 404
+        ? 'Set up your patient profile (Profile page) to start booking appointments.'
+        : extractError(err)))
       .finally(() => setLoading(false));
   };
 

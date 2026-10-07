@@ -13,6 +13,12 @@ const base = (size) => ({
   'aria-hidden': true,
 });
 
+export const Plus = ({ size = 18 }) => (
+  <svg {...base(size)}>
+    <path d="M12 5v14M5 12h14" strokeWidth="2.6" />
+  </svg>
+);
+
 export const Cross = ({ size = 18 }) => (
   <svg {...base(size)}>
     <path d="M12 2v20M4 6h16M4 12h16M4 18h16" strokeWidth="2.4" opacity="0" />
@@ -181,6 +187,14 @@ export const Sparkle = ({ size = 18 }) => (
 export const ArrowRight = ({ size = 18 }) => (
   <svg {...base(size)}>
     <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
+export const Trash = ({ size = 18 }) => (
+  <svg {...base(size)}>
+    <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6M14 11v6" />
   </svg>
 );
 

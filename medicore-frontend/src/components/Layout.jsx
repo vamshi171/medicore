@@ -6,22 +6,74 @@ import { Cross, Logout, Bell, User as UserIcon } from './Icons.jsx';
 
 const NAV = {
   PATIENT: [
-    { to: '/patient', label: 'Dashboard', icon: null },
+    { to: '/patient', label: 'Dashboard' },
     { to: '/patient/doctors', label: 'Find Doctors' },
     { to: '/patient/appointments', label: 'My Appointments' },
+    { to: '/patient/blood-bank', label: 'Blood Bank' },
+    { to: '/patient/organ-donation', label: 'Organ Donation' },
     { to: '/patient/profile', label: 'Profile' },
     { to: '/patient/notifications', label: 'Notifications' },
   ],
   DOCTOR: [
     { to: '/doctor', label: 'Dashboard' },
     { to: '/doctor/appointments', label: 'Appointments' },
+    { to: '/doctor/blood-bank', label: 'Blood Bank' },
+    { to: '/doctor/organ-donation', label: 'Organ Donation' },
     { to: '/doctor/profile', label: 'Profile' },
+    { to: '/doctor/notifications', label: 'Notifications' },
   ],
   ADMIN: [
     { to: '/admin', label: 'Dashboard' },
     { to: '/admin/users', label: 'Users' },
+    { to: '/admin/blood-bank', label: 'Blood Bank' },
+    { to: '/admin/organ-donation', label: 'Organ Donation' },
+    { to: '/admin/notifications', label: 'Notifications' },
+  ],
+  BLOOD_BANK_OFFICER: [
+    { to: '/bloodbank', label: 'Dashboard' },
+    { to: '/bloodbank/inventory', label: 'Inventory' },
+    { to: '/bloodbank/requests', label: 'Requests' },
+    { to: '/bloodbank/donors', label: 'Donor Registry' },
+    { to: '/bloodbank/notifications', label: 'Notifications' },
+  ],
+  TRANSPLANT_COORDINATOR: [
+    { to: '/transplant', label: 'Dashboard' },
+    { to: '/transplant/pledges', label: 'Donor Pledges' },
+    { to: '/transplant/waitlist', label: 'Waitlist' },
+    { to: '/transplant/matches', label: 'Allocations' },
+    { to: '/transplant/notifications', label: 'Notifications' },
   ],
 };
+
+/**
+ * Where each role's "home" is.
+ * The brand link and post-login redirect both go through this — previously the
+ * brand linked to "/", which is a PATIENT-only route, so every admin, doctor
+ * and operator clicking the logo landed on the "Unauthorized" page.
+ */
+export const HOME = {
+  PATIENT: '/patient',
+  DOCTOR: '/doctor',
+  ADMIN: '/admin',
+  BLOOD_BANK_OFFICER: '/bloodbank',
+  TRANSPLANT_COORDINATOR: '/transplant',
+};
+
+/** Each role's notification feed path (all roles have a feed). */
+export const NOTIF_PATH = {
+  PATIENT: '/patient/notifications',
+  DOCTOR: '/doctor/notifications',
+  ADMIN: '/admin/notifications',
+  BLOOD_BANK_OFFICER: '/bloodbank/notifications',
+  TRANSPLANT_COORDINATOR: '/transplant/notifications',
+};
+
+/**
+ * Only roles that actually own a profile record get a "My profile" entry.
+ * ADMIN had none, so the menu item used to send admins to /admin/profile,
+ * which does not exist (404 -> Unauthorized page).
+ */
+export const HAS_PROFILE = { PATIENT: true, DOCTOR: true };
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
@@ -29,7 +81,8 @@ export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  const links = user ? NAV[user.role] || [] : [];
+  const role = user?.role;
+  const links = role ? NAV[role] || [] : [];
 
   // Close the avatar dropdown when clicking anywhere outside it.
   useEffect(() => {
@@ -48,12 +101,12 @@ export default function Layout({ children }) {
   return (
     <div className="app-shell">
       <header className="navbar">
-        <Link to="/" className="brand">
+        <Link to={role ? HOME[role] || '/' : '/'} className="brand">
           <span className="brand-mark"><Cross size={16} /></span> MediCore
         </Link>
         <nav className="nav-links">
           {links.map((l) => (
-            <NavLink key={l.to} to={l.to} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <NavLink key={l.to} to={l.to} end={l.to === HOME[role]} className={({ isActive }) => (isActive ? 'active' : '')}>
               {l.label}
             </NavLink>
           ))}
@@ -61,12 +114,12 @@ export default function Layout({ children }) {
         <div className="nav-user" ref={menuRef}>
           {user ? (
             <>
-              <span className="badge role-badge">{user.role}</span>
+              <span className="badge role-badge">{user.role.replace(/_/g, ' ')}</span>
               <button
                 type="button"
                 className="btn btn-icon btn-outline"
                 style={{ position: 'relative' }}
-                onClick={() => navigate(`/${user.role.toLowerCase()}/notifications`)}
+                onClick={() => navigate(NOTIF_PATH[role] || '/login')}
                 aria-label="Notifications"
               >
                 <Bell size={16} />
@@ -94,17 +147,27 @@ export default function Layout({ children }) {
                       <Avatar name={user.email} size="md" ring />
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user.email}</div>
-                        <span className="badge role-badge" style={{ marginTop: 4 }}>{user.role}</span>
+                        <span className="badge role-badge" style={{ marginTop: 4 }}>{user.role.replace(/_/g, ' ')}</span>
                       </div>
                     </div>
                     <div style={{ borderTop: '1px solid var(--border)', margin: '6px 0' }} />
+                    {HAS_PROFILE[role] ? (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm btn-block"
+                        style={{ justifyContent: 'flex-start', border: 'none' }}
+                        onClick={() => { setMenuOpen(false); navigate(`/${role.toLowerCase()}/profile`); }}
+                      >
+                        <UserIcon size={15} /> My profile
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       className="btn btn-outline btn-sm btn-block"
                       style={{ justifyContent: 'flex-start', border: 'none' }}
-                      onClick={() => { setMenuOpen(false); navigate(`/${user.role.toLowerCase()}/profile`); }}
+                      onClick={() => { setMenuOpen(false); navigate(NOTIF_PATH[role] || '/login'); }}
                     >
-                      <UserIcon size={15} /> My profile
+                      <Bell size={15} /> Notifications
                     </button>
                     <button
                       type="button"
@@ -123,7 +186,8 @@ export default function Layout({ children }) {
       </header>
       <main className="page page-enter">{children}</main>
       <footer className="footer">
-        <strong>MediCore</strong> — Spring Boot microservices (Gateway · JWT · Eureka · Feign · Resilience4j) + React 18
+        <strong>MediCore</strong> — 9 Spring Boot microservices (Gateway · JWT · Eureka · Feign · Resilience4j)
+        covering appointments, blood banking and organ donation, + React 18
       </footer>
     </div>
   );

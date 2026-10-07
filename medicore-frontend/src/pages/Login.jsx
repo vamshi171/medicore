@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { extractError } from '../services/api.js';
 import { useToast } from '../components/Toast.jsx';
@@ -10,11 +10,23 @@ const DEMO_ACCOUNTS = [
   { label: 'Admin', email: 'admin@medicore.com', password: 'Admin@123' },
   { label: 'Doctor', email: 'doctor@medicore.com', password: 'Doctor@123' },
   { label: 'Patient', email: 'patient@medicore.com', password: 'Patient@123' },
+  { label: 'Blood bank', email: 'bloodbank@medicore.com', password: 'Bloodbank@123' },
+  { label: 'Transplant', email: 'coordinator@medicore.com', password: 'Coordinator@123' },
 ];
+
+/** Post-login landing page per role (the two operator roles need their own homes). */
+const HOME_BY_ROLE = {
+  ADMIN: '/admin',
+  DOCTOR: '/doctor',
+  PATIENT: '/patient',
+  BLOOD_BANK_OFFICER: '/bloodbank',
+  TRANSPLANT_COORDINATOR: '/transplant',
+};
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,9 +40,10 @@ export default function Login() {
     try {
       const auth = await login(email, password);
       toast(`Welcome back, ${auth.email}`, 'success');
-      navigate(
-        auth.role === 'ADMIN' ? '/admin' : auth.role === 'DOCTOR' ? '/doctor' : '/patient'
-      );
+      // Land on the page they originally asked for (a homepage page link),
+      // otherwise fall back to the role's own dashboard.
+      const intended = location.state?.from;
+      navigate(intended ? `${intended.pathname}${intended.search || ''}` : (HOME_BY_ROLE[auth.role] || '/login'));
     } catch (err) {
       setError(extractError(err));
     } finally {
@@ -52,8 +65,9 @@ export default function Login() {
         </div>
         <h2>Healthcare management, built on microservices.</h2>
         <p className="lead">
-          One platform for patients, doctors and administrators — appointments,
-          profiles and notifications in real time.
+          One platform for patients, doctors, administrators and two domain
+          operator roles — appointments, blood banking and organ donation,
+          each with its own access rules.
         </p>
 
         <div className="auth-feature">
@@ -79,9 +93,9 @@ export default function Login() {
         </div>
 
         <div className="auth-stat-row">
-          <div className="auth-stat"><b>7</b><span>microservices</span></div>
+          <div className="auth-stat"><b>9</b><span>microservices</span></div>
           <div className="auth-stat"><b>JWT</b><span>end-to-end auth</span></div>
-          <div className="auth-stat"><b>24/7</b><span>on-duty doctors</span></div>
+          <div className="auth-stat"><b>5</b><span>roles with scoped access</span></div>
         </div>
       </aside>
 

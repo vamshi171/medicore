@@ -50,13 +50,33 @@ export function InfoBanner({ message }) {
 }
 
 const STATUS_CLASS = {
+  // appointments
   SCHEDULED: 'badge badge-blue',
   CONFIRMED: 'badge badge-cyan',
   COMPLETED: 'badge badge-green',
   CANCELLED: 'badge badge-red',
+  // notifications
   SENT: 'badge badge-green',
   QUEUED: 'badge badge-amber',
   FAILED: 'badge badge-red',
+  // blood bank requests
+  REQUESTED: 'badge badge-amber',
+  APPROVED: 'badge badge-cyan',
+  FULFILLED: 'badge badge-green',
+  REJECTED: 'badge badge-red',
+  // organ pledges
+  PENDING: 'badge badge-amber',
+  VERIFIED: 'badge badge-blue',
+  ACTIVE: 'badge badge-green',
+  REVOKED: 'badge badge-gray',
+  // organ waitlist
+  WAITING: 'badge badge-amber',
+  MATCHED: 'badge badge-cyan',
+  TRANSPLANTED: 'badge badge-green',
+  REMOVED: 'badge badge-gray',
+  // organ allocations
+  PROPOSED: 'badge badge-amber',
+  WITHDRAWN: 'badge badge-gray',
 };
 
 export function StatusBadge({ status }) {

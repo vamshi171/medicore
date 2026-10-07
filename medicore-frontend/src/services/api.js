@@ -74,6 +74,73 @@ export const notificationService = {
     api.get('/notifications', { params: { page, size } }),
 };
 
+/**
+ * Blood bank domain (/api/bloodbank/**).
+ * The gateway allows ADMIN, DOCTOR, PATIENT and BLOOD_BANK_OFFICER here —
+ * a TRANSPLANT_COORDINATOR token is refused at the edge.
+ */
+export const bloodBankService = {
+  metadata: () => api.get('/bloodbank/metadata'),
+  compatibility: (bloodGroup) => api.get(`/bloodbank/compatibility/${bloodGroup}`),
+
+  // availability = the patient/doctor-safe projection of stock
+  availability: (params) => api.get('/bloodbank/availability', { params }),
+
+  // full lot detail — staff only
+  inventory: (params) => api.get('/bloodbank/inventory', { params }),
+  expiring: (days = 30) => api.get('/bloodbank/inventory/expiring', { params: { days } }),
+  createLot: (data) => api.post('/bloodbank/inventory', data),
+  updateLot: (id, data) => api.put(`/bloodbank/inventory/${id}`, data),
+  adjustLot: (id, delta) => api.post(`/bloodbank/inventory/${id}/adjust`, { delta }),
+  discardLot: (id) => api.delete(`/bloodbank/inventory/${id}`),
+
+  raiseRequest: (data) => api.post('/bloodbank/requests', data),
+  myRequests: (params) => api.get('/bloodbank/requests/mine', { params }),
+  allRequests: (params) => api.get('/bloodbank/requests', { params }),
+  getRequest: (id) => api.get(`/bloodbank/requests/${id}`),
+  decideRequest: (id, data) => api.post(`/bloodbank/requests/${id}/decision`, data),
+  cancelRequest: (id) => api.patch(`/bloodbank/requests/${id}/cancel`),
+
+  myDonor: () => api.get('/bloodbank/donors/me'),
+  registerDonor: (data) => api.post('/bloodbank/donors/me', data),
+  updateDonor: (data) => api.put('/bloodbank/donors/me', data),
+  donors: (params) => api.get('/bloodbank/donors', { params }),
+  setDonorEligibility: (id, data) => api.patch(`/bloodbank/donors/${id}/eligibility`, data),
+
+  stats: () => api.get('/bloodbank/stats'),
+};
+
+/**
+ * Organ donation domain (/api/organs/**).
+ * The gateway allows ADMIN, DOCTOR, PATIENT and TRANSPLANT_COORDINATOR —
+ * a BLOOD_BANK_OFFICER token is refused at the edge.
+ */
+export const organService = {
+  metadata: () => api.get('/organs/metadata'),
+  stats: () => api.get('/organs/stats'),
+
+  myPledge: () => api.get('/organs/pledges/me'),
+  createPledge: (data) => api.post('/organs/pledges/me', data),
+  updatePledge: (data) => api.put('/organs/pledges/me', data),
+  revokePledge: () => api.patch('/organs/pledges/me/revoke'),
+
+  pledges: (params) => api.get('/organs/pledges', { params }),
+  getPledge: (id) => api.get(`/organs/pledges/${id}`),
+  verifyPledge: (id, data) => api.patch(`/organs/pledges/${id}/verify`, data),
+
+  myWaitlist: () => api.get('/organs/waitlist/mine'),
+  addToWaitlist: (data) => api.post('/organs/waitlist', data),
+  waitlist: (params) => api.get('/organs/waitlist', { params }),
+  getWaitlist: (id) => api.get(`/organs/waitlist/${id}`),
+  setWaitlistStatus: (id, data) => api.patch(`/organs/waitlist/${id}/status`, data),
+  candidates: (id) => api.get(`/organs/waitlist/${id}/candidates`),
+
+  myMatches: () => api.get('/organs/matches/mine'),
+  matches: (params) => api.get('/organs/matches', { params }),
+  proposeMatch: (data) => api.post('/organs/matches', data),
+  setMatchStatus: (id, data) => api.patch(`/organs/matches/${id}/status`, data),
+};
+
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
   set: (token, user) => {

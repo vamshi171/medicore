@@ -18,6 +18,12 @@ export default function DoctorDashboard() {
       .then(([profileRes, apptRes]) => {
         if (profileRes.status === 'fulfilled') setProfile(profileRes.value.data.data);
         if (apptRes.status === 'fulfilled') setAppointments(apptRes.value.data.data.content);
+        if (apptRes.status === 'rejected' && apptRes.reason?.response?.status === 404) {
+          // No doctor profile yet — the profile CTA below covers onboarding,
+          // so don't scare the user with an error banner.
+        } else if (apptRes.status === 'rejected') {
+          setError(extractError(apptRes.reason));
+        }
       })
       .finally(() => setLoading(false));
   }, []);
