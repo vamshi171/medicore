@@ -186,6 +186,8 @@ a { color: var(--blue); }
 .auth-title { font-size: 1.45rem; }
 .auth-subtitle { color: var(--muted); margin: 2px 0 22px; font-size: 0.92rem; }
 .auth-alt { text-align: center; font-size: 0.9rem; color: var(--muted); margin: 16px 0 0; }
+.auth-alt.back-home { margin-top: 8px; }
+.auth-alt.back-home a { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
 
 .demo-accounts { margin-top: 18px; border-top: 1px dashed var(--border); padding-top: 14px; }
 .demo-accounts p { font-size: 0.78rem; color: var(--muted); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }

@@ -190,6 +190,12 @@ export const ArrowRight = ({ size = 18 }) => (
   </svg>
 );
 
+export const ArrowLeft = ({ size = 18 }) => (
+  <svg {...base(size)}>
+    <path d="M19 12H5M11 6l-6 6 6 6" />
+  </svg>
+);
+
 export const Trash = ({ size = 18 }) => (
   <svg {...base(size)}>
     <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />

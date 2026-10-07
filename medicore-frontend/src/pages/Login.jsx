@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { extractError } from '../services/api.js';
 import { useToast } from '../components/Toast.jsx';
 import { ErrorBanner } from '../components/ui.jsx';
-import { Cross, Lock, Mail, Shield, Calendar, Stethoscope } from '../components/Icons.jsx';
+import { ArrowLeft, Cross, Lock, Mail, Shield, Calendar, Stethoscope } from '../components/Icons.jsx';
 
 const DEMO_ACCOUNTS = [
   { label: 'Admin', email: 'admin@medicore.com', password: 'Admin@123' },
@@ -60,9 +60,9 @@ export default function Login() {
   return (
     <div className="auth-page">
       <aside className="auth-aside">
-        <div className="brand" style={{ color: '#fff' }}>
+        <Link to="/" className="brand" style={{ color: '#fff' }} aria-label="Back to MediCore homepage">
           <span className="brand-mark"><Cross size={16} /></span> MediCore
-        </div>
+        </Link>
         <h2>Healthcare management, built on microservices.</h2>
         <p className="lead">
           One platform for patients, doctors, administrators and two domain
@@ -145,6 +145,10 @@ export default function Login() {
 
           <p className="auth-alt">
             No account? <Link to="/register">Register here</Link>
+          </p>
+
+          <p className="auth-alt back-home">
+            <Link to="/"><ArrowLeft size={13} /> Back to homepage</Link>
           </p>
 
           <div className="demo-accounts">

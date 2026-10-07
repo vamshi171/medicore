@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { extractError } from '../services/api.js';
 import { ErrorBanner } from '../components/ui.jsx';
-import { Cross, Mail, Lock, User as UserIcon, Shield, Calendar, Stethoscope } from '../components/Icons.jsx';
+import { ArrowLeft, Cross, Mail, Lock, User as UserIcon, Shield, Calendar, Stethoscope } from '../components/Icons.jsx';
 
 export default function Register() {
   const { register } = useAuth();
@@ -39,9 +39,9 @@ export default function Register() {
   return (
     <div className="auth-page">
       <aside className="auth-aside">
-        <div className="brand" style={{ color: '#fff' }}>
+        <Link to="/" className="brand" style={{ color: '#fff' }} aria-label="Back to MediCore homepage">
           <span className="brand-mark"><Cross size={16} /></span> MediCore
-        </div>
+        </Link>
         <h2>Join MediCore today.</h2>
         <p className="lead">
           Create an account as a patient to book appointments, or as a doctor to
@@ -122,6 +122,10 @@ export default function Register() {
 
           <p className="auth-alt">
             Already registered? <Link to="/login">Sign in</Link>
+          </p>
+
+          <p className="auth-alt back-home">
+            <Link to="/"><ArrowLeft size={13} /> Back to homepage</Link>
           </p>
         </form>
       </main>

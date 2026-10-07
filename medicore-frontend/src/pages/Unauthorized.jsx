@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield } from '../components/Icons.jsx';
+import { ArrowLeft, Shield } from '../components/Icons.jsx';
 
 export default function Unauthorized() {
   return (
@@ -13,6 +13,9 @@ export default function Unauthorized() {
             mistake, contact an administrator.
           </p>
           <Link className="btn btn-primary btn-block" to="/login">Go to login</Link>
+          <Link className="btn btn-outline btn-block" to="/" style={{ marginTop: 8 }}>
+            <ArrowLeft size={14} /> Back to homepage
+          </Link>
         </div>
       </main>
     </div>
