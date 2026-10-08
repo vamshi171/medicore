@@ -149,7 +149,7 @@ bash ../_tools/verify-domains.sh   # 75 assertions: role matrix, ownership, ABO 
 
 ### Postman
 
-Import `postman/MediCore.postman_collection.json` → run **Auth → Login** first (auto-captures the JWT into a collection variable) → everything else is pre-wired.
+Import `postman/MediCore.postman_collection.json` and `postman/medicore.seed.postman_environment.json`, then select that environment. Run **Auth → Login** first (auto-captures the JWT into a collection variable) → everything else is pre-wired.
 
 ---
 

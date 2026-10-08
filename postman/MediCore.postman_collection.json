@@ -1,12 +1,15 @@
 {
   "info": {
     "name": "MediCore API",
-    "description": "Complete API collection for the MediCore healthcare microservices system. Login first (accessToken is auto-saved), then run the other requests.",
+    "description": "Complete API collection for the MediCore healthcare microservices system. Import postman/medicore.seed.postman_environment.json and select it, then run Auth → Login first (accessToken is auto-saved).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "accessToken", "value": "" }
+    { "key": "accessToken", "value": "" },
+    { "key": "demoEmail", "value": "" },
+    { "key": "demoPassword", "value": "" },
+    { "key": "registerEmail", "value": "" }
   ],
   "auth": {
     "type": "bearer",
@@ -37,7 +40,7 @@
             "auth": { "type": "noauth" },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"patient@medicore.com\",\n  \"password\": \"Patient@123\"\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{demoEmail}}\",\n  \"password\": \"{{demoPassword}}\"\n}" }
           }
         },
         {
@@ -47,7 +50,7 @@
             "auth": { "type": "noauth" },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"new.patient@medicore.com\",\n  \"password\": \"Patient@123\",\n  \"role\": \"PATIENT\"\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"{{demoPassword}}\",\n  \"role\": \"PATIENT\"\n}" }
           }
         },
         {

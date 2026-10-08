@@ -5,14 +5,7 @@ import { extractError } from '../services/api.js';
 import { useToast } from '../components/Toast.jsx';
 import { ErrorBanner } from '../components/ui.jsx';
 import { ArrowLeft, Cross, Lock, Mail, Shield, Calendar, Stethoscope } from '../components/Icons.jsx';
-
-const DEMO_ACCOUNTS = [
-  { label: 'Admin', email: 'admin@medicore.com', password: 'Admin@123' },
-  { label: 'Doctor', email: 'doctor@medicore.com', password: 'Doctor@123' },
-  { label: 'Patient', email: 'patient@medicore.com', password: 'Patient@123' },
-  { label: 'Blood bank', email: 'bloodbank@medicore.com', password: 'Bloodbank@123' },
-  { label: 'Transplant', email: 'coordinator@medicore.com', password: 'Coordinator@123' },
-];
+import { DEMO_ACCOUNTS } from '../demoSeed.js';
 
 /** Post-login landing page per role (the two operator roles need their own homes). */
 const HOME_BY_ROLE = {
