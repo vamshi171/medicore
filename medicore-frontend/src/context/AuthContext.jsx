@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react';
-import { authService, tokenStore } from '../services/api.js';
+import { authService, doctorService, patientService, tokenStore } from '../services/api.js';
 
 const AuthContext = createContext(null);
 
@@ -16,6 +16,10 @@ export function AuthProvider({ children }) {
         role: auth.role,
       });
       setUser(tokenStore.getUser());
+      // Best-effort: touch the (auto-provisioned) profile right after sign-in
+      // so the dashboard and appointment lookups work on the very first visit.
+      if (auth.role === 'PATIENT') patientService.getMyProfile().catch(() => {});
+      if (auth.role === 'DOCTOR') doctorService.getMyProfile().catch(() => {});
       return auth;
     };
 

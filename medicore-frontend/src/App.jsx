@@ -1,34 +1,44 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+
+// Landing page stays in the entry bundle (fast first paint); every app
+// screen is code-split so visitors don't download all 28 pages up front.
 import Home from './pages/Home.jsx';
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
-import Unauthorized from './pages/Unauthorized.jsx';
-import PatientDashboard from './pages/patient/PatientDashboard.jsx';
-import FindDoctors from './pages/patient/FindDoctors.jsx';
-import MyAppointments from './pages/patient/MyAppointments.jsx';
-import PatientProfile from './pages/patient/PatientProfile.jsx';
-import PatientBloodBank from './pages/patient/PatientBloodBank.jsx';
-import PatientOrganDonation from './pages/patient/PatientOrganDonation.jsx';
-import Notifications from './pages/shared/Notifications.jsx';
-import DoctorDashboard from './pages/doctor/DoctorDashboard.jsx';
-import DoctorAppointments from './pages/doctor/DoctorAppointments.jsx';
-import DoctorProfile from './pages/doctor/DoctorProfile.jsx';
-import DoctorBloodBank from './pages/doctor/DoctorBloodBank.jsx';
-import DoctorOrganDonation from './pages/doctor/DoctorOrganDonation.jsx';
-import AdminDashboard from './pages/admin/AdminDashboard.jsx';
-import AdminUsers from './pages/admin/AdminUsers.jsx';
-import AdminBloodBank from './pages/admin/AdminBloodBank.jsx';
-import AdminOrganDonation from './pages/admin/AdminOrganDonation.jsx';
-import BloodBankDashboard from './pages/bloodbank/BloodBankDashboard.jsx';
-import BloodBankInventory from './pages/bloodbank/BloodBankInventory.jsx';
-import BloodBankRequests from './pages/bloodbank/BloodBankRequests.jsx';
-import BloodBankDonors from './pages/bloodbank/BloodBankDonors.jsx';
-import TransplantDashboard from './pages/transplant/TransplantDashboard.jsx';
-import TransplantPledges from './pages/transplant/TransplantPledges.jsx';
-import TransplantWaitlist from './pages/transplant/TransplantWaitlist.jsx';
-import TransplantMatches from './pages/transplant/TransplantMatches.jsx';
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Register = lazy(() => import('./pages/Register.jsx'));
+const Unauthorized = lazy(() => import('./pages/Unauthorized.jsx'));
+const PatientDashboard = lazy(() => import('./pages/patient/PatientDashboard.jsx'));
+const FindDoctors = lazy(() => import('./pages/patient/FindDoctors.jsx'));
+const MyAppointments = lazy(() => import('./pages/patient/MyAppointments.jsx'));
+const PatientProfile = lazy(() => import('./pages/patient/PatientProfile.jsx'));
+const PatientBloodBank = lazy(() => import('./pages/patient/PatientBloodBank.jsx'));
+const PatientOrganDonation = lazy(() => import('./pages/patient/PatientOrganDonation.jsx'));
+const Notifications = lazy(() => import('./pages/shared/Notifications.jsx'));
+const DoctorDashboard = lazy(() => import('./pages/doctor/DoctorDashboard.jsx'));
+const DoctorAppointments = lazy(() => import('./pages/doctor/DoctorAppointments.jsx'));
+const DoctorProfile = lazy(() => import('./pages/doctor/DoctorProfile.jsx'));
+const DoctorBloodBank = lazy(() => import('./pages/doctor/DoctorBloodBank.jsx'));
+const DoctorOrganDonation = lazy(() => import('./pages/doctor/DoctorOrganDonation.jsx'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers.jsx'));
+const AdminBloodBank = lazy(() => import('./pages/admin/AdminBloodBank.jsx'));
+const AdminOrganDonation = lazy(() => import('./pages/admin/AdminOrganDonation.jsx'));
+const BloodBankDashboard = lazy(() => import('./pages/bloodbank/BloodBankDashboard.jsx'));
+const BloodBankInventory = lazy(() => import('./pages/bloodbank/BloodBankInventory.jsx'));
+const BloodBankRequests = lazy(() => import('./pages/bloodbank/BloodBankRequests.jsx'));
+const BloodBankDonors = lazy(() => import('./pages/bloodbank/BloodBankDonors.jsx'));
+const TransplantDashboard = lazy(() => import('./pages/transplant/TransplantDashboard.jsx'));
+const TransplantPledges = lazy(() => import('./pages/transplant/TransplantPledges.jsx'));
+const TransplantWaitlist = lazy(() => import('./pages/transplant/TransplantWaitlist.jsx'));
+const TransplantMatches = lazy(() => import('./pages/transplant/TransplantMatches.jsx'));
+
+const PageFallback = () => (
+  <div style={{ padding: 48, textAlign: 'center', color: '#64748b', fontFamily: 'inherit' }}>
+    Loading…
+  </div>
+);
 
 const wrap = (roles, element) => (
   <ProtectedRoute roles={roles}>
@@ -39,6 +49,7 @@ const wrap = (roles, element) => (
 export default function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -89,6 +100,7 @@ export default function App() {
 
         <Route path="*" element={<Unauthorized />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
