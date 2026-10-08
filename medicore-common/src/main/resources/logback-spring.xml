@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Shared logback config for all MediCore servlet services: every line is
+  prefixed with the service name and the X-Request-Id correlation id
+  (populated by com.medicore.common.web.RequestIdFilter via MDC).
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="service"/>
+    <property name="MEDICORE_CONSOLE_PATTERN"
+              value="%d{HH:mm:ss.SSS} %-5level [${appName}] [%X{requestId:-}] %logger{36} - %msg%n"/>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${MEDICORE_CONSOLE_PATTERN}</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
