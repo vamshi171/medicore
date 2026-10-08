@@ -3,6 +3,7 @@ package com.medicore.appointment.feign;
 import com.medicore.common.exception.ResourceNotFoundException;
 import com.medicore.common.security.CurrentUser;
 import com.medicore.common.security.InternalTokenFilter;
+import com.medicore.common.web.RequestIdFilter;
 import feign.RequestInterceptor;
 import feign.codec.ErrorDecoder;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,11 @@ public class FeignConfig {
     public RequestInterceptor internalTokenInterceptor() {
         return template -> {
             template.header(InternalTokenFilter.HEADER, medicoreInternalToken());
+            // Keep the correlation id flowing across service hops.
+            String requestId = org.slf4j.MDC.get(RequestIdFilter.MDC_KEY);
+            if (requestId != null) {
+                template.header(RequestIdFilter.HEADER, requestId);
+            }
             com.medicore.common.security.UserPrincipal principal = CurrentUser.get();
             if (principal != null) {
                 template.header("X-User-Id", String.valueOf(principal.userId()));

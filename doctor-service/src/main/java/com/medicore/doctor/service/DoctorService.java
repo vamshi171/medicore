@@ -8,6 +8,7 @@ import com.medicore.doctor.dto.DoctorDtos.DoctorRequest;
 import com.medicore.doctor.dto.DoctorDtos.DoctorResponse;
 import com.medicore.doctor.entity.Doctor;
 import com.medicore.doctor.repository.DoctorRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,12 +46,49 @@ public class DoctorService {
         return DoctorResponse.from(doctorRepository.save(doctor));
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Freshly registered doctors have no profile row yet. Materialise a
+     * minimal OFF-DUTY shell on first access (invisible in patient search
+     * until they flip availability and complete their details).
+     */
+    @Transactional
     public DoctorResponse getMyProfile() {
         Long userId = CurrentUser.requireUserId();
-        return doctorRepository.findByUserId(userId)
-                .map(DoctorResponse::from)
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor profile for user", userId));
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseGet(() -> selfHealProfile(userId));
+        return DoctorResponse.from(doctor);
+    }
+
+    private Doctor selfHealProfile(Long userId) {
+        Doctor doctor = new Doctor();
+        doctor.setUserId(userId);
+        doctor.setFullName(defaultFullName(userId));
+        doctor.setAvailable(false); // opt in deliberately from the dashboard
+        try {
+            return doctorRepository.saveAndFlush(doctor);
+        } catch (DataIntegrityViolationException race) {
+            return doctorRepository.findByUserId(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Doctor profile for user", userId));
+        }
+    }
+
+    private String defaultFullName(Long userId) {
+        com.medicore.common.security.UserPrincipal principal = CurrentUser.get();
+        String email = principal != null ? principal.email() : ("user-" + userId);
+        String local = email.contains("@") ? email.substring(0, email.indexOf('@')) : email;
+        String cleaned = local.replaceAll("[._+-]+", " ").trim();
+        if (cleaned.isEmpty()) {
+            return "New doctor " + userId;
+        }
+        StringBuilder name = new StringBuilder();
+        for (String word : cleaned.split("\\s+")) {
+            if (!word.isEmpty()) {
+                name.append(Character.toUpperCase(word.charAt(0)))
+                    .append(word.substring(1).toLowerCase())
+                    .append(' ');
+            }
+        }
+        return name.toString().trim();
     }
 
     @Transactional

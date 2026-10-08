@@ -1,5 +1,6 @@
 package com.medicore.common.security;
 
+import com.medicore.common.web.RequestIdFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -35,5 +36,16 @@ public class SecurityConfigSupport {
     public InternalTokenFilter internalTokenFilter(
             @Value("${medicore.internal-token:medicore-internal-dev-token}") String expectedToken) {
         return new InternalTokenFilter(expectedToken);
+    }
+
+    /** Runs first so every log line — including auth failures — carries the id. */
+    @Bean
+    public FilterRegistrationBean<RequestIdFilter> requestIdFilterRegistration() {
+        FilterRegistrationBean<RequestIdFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new RequestIdFilter());
+        registration.addUrlPatterns("/*");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        registration.setName("medicoreRequestIdFilter");
+        return registration;
     }
 }
